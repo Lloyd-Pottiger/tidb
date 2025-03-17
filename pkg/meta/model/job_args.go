@@ -1546,7 +1546,7 @@ func (a *ModifyIndexArgs) decodeAddVectorIndexV1(job *Job) error {
 func (a *ModifyIndexArgs) getFinishedArgsV1(job *Job) []any {
 	// Add index
 	if a.OpType == OpAddIndex {
-		if job.Type == ActionAddVectorIndex {
+		if job.Type == ActionAddVectorIndex || job.Type == ActionAddColumnarIndex {
 			return []any{a.IndexArgs[0].IndexID, a.IndexArgs[0].IfExist, a.PartitionIDs, a.IndexArgs[0].IsGlobal}
 		}
 

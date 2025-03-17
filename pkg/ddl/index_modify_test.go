@@ -1238,7 +1238,7 @@ func TestAddVectorIndexSimple(t *testing.T) {
 	tk.MustExec("alter table t add key idx(a);")
 	tk.MustGetErrCode("alter table t add vector index idx((vec_cosine_distance(c))) USING HNSW;", errno.ErrDupKeyName)
 	// for duplicated function
-	testfailpoint.Enable(t, "github.com/pingcap/tidb/pkg/ddl/MockCheckVectorIndexProcess", `return(1)`)
+	testfailpoint.Enable(t, "github.com/pingcap/tidb/pkg/ddl/MockCheckColumnarIndexProcess", `return(1)`)
 	tk.MustContainErrMsg("alter table t add vector index vecIdx((vec_cosine_distance(b))) USING HNSW;",
 		"add vector index can only be defined on fixed-dimension vector columns")
 	tk.MustExec("alter table t add vector index vecIdx((vec_cosine_distance(c))) USING HNSW;")
@@ -1427,7 +1427,7 @@ func TestAddVectorIndexRollback(t *testing.T) {
 	var checkErr error
 	tk1 := testkit.NewTestKit(t, store)
 	tk1.MustExec("use test")
-	testfailpoint.Enable(t, "github.com/pingcap/tidb/pkg/ddl/MockCheckVectorIndexProcess", `return(0)`)
+	testfailpoint.Enable(t, "github.com/pingcap/tidb/pkg/ddl/MockCheckColumnarIndexProcess", `return(0)`)
 	onJobUpdatedExportedFunc := func(job *model.Job) {
 		if checkErr != nil {
 			return
@@ -1452,18 +1452,18 @@ func TestAddVectorIndexRollback(t *testing.T) {
 
 	// Case3: test get error message from tiflash
 	testfailpoint.Disable(t, "github.com/pingcap/tidb/pkg/ddl/afterWaitSchemaSynced")
-	testfailpoint.Enable(t, "github.com/pingcap/tidb/pkg/ddl/MockCheckVectorIndexProcess", `return(-1)`)
+	testfailpoint.Enable(t, "github.com/pingcap/tidb/pkg/ddl/MockCheckColumnarIndexProcess", `return(-1)`)
 	tk.MustContainErrMsg(addIdxSQL, "[ddl:9014]TiFlash backfill index failed: mock a check error")
 	checkRollbackInfo(model.JobStateRollbackDone)
 
 	// Case4: add a vector index normally.
-	testfailpoint.Enable(t, "github.com/pingcap/tidb/pkg/ddl/MockCheckVectorIndexProcess", `return(4)`)
+	testfailpoint.Enable(t, "github.com/pingcap/tidb/pkg/ddl/MockCheckColumnarIndexProcess", `return(4)`)
 	tk.MustExec(addIdxSQL)
 	checkRollbackInfo(model.JobStateSynced)
 	// TODO: add mock TiFlash to make sure the vector index count is equal to row count.
 	// tk.MustQuery("select count(1) from t1 use index(v_idx);").Check(testkit.Rows("4"))
 
-	testfailpoint.Disable(t, "github.com/pingcap/tidb/pkg/ddl/MockCheckVectorIndexProcess")
+	testfailpoint.Disable(t, "github.com/pingcap/tidb/pkg/ddl/MockCheckColumnarIndexProcess")
 }
 
 func TestInsertDuplicateBeforeIndexMerge(t *testing.T) {

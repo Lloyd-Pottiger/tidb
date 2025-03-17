@@ -884,6 +884,7 @@ const (
 	ConstraintFulltext
 	ConstraintCheck
 	ConstraintVector
+	ConstraintColumnar
 )
 
 // Constraint is constraint for table definition.
